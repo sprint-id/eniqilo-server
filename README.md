@@ -46,10 +46,6 @@ Database migration must use [golang-migrate](https://github.com/golang-migrate/m
         ```bash
         migrate -database "postgres://postgres:password@host:5432/postgres?sslmode=disable" -path db/migrations -verbose drop
         ```
-        
-
-⚠️ At showcase day, you should migrate the production database yourself in your local environment
-And after you done, you should also rollback the migration yourself
 
 
 ## Run & Build EniQilo Store
