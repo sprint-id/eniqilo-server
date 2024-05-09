@@ -22,28 +22,24 @@ func newProductHandler(productSvc *service.ProductService) *productHandler {
 
 // {
 // 	"name": "", // not null, minLength 1, maxLength 30
-// 	"race": "", /** not null, enum of:
-// 			- "Persian"
-// 			- "Maine Coon"
-// 			- "Siamese"
-// 			- "Ragdoll"
-// 			- "Bengal"
-// 			- "Sphynx"
-// 			- "British Shorthair"
-// 			- "Abyssinian"
-// 			- "Scottish Fold"
-// 			- "Birman" */
-// 	"sex": "", // not null, enum of: "male" / "female"
-// 	"ageInMonth": 1, // not null, min: 1, max: 120082
-// 	"description":"" // not null, minLength 1, maxLength 200
-// 	"imageUrls":[ // not null, minItems: 1, items: not null, should be url
-// 		"","",""
-// 	]
+// 	"sku": "", // not null, minLength 1, maxLength 30
+// 	"category": "", /** not null, enum of:
+// 			- "Clothing"
+// 			- "Accessories"
+// 			- "Footwear"
+// 			- "Beverages"
+// 			*/
+// 	"imageUrl": "", // not null, should be url
+// 	"notes":"", // not null, minLength 1, maxLength 200
+// 	"price":1, // not null, min: 1
+// 	"stock": 1, // not null, min: 0, max: 100000
+// 	"location": "", // not null, minLength 1, maxLength 200
+// 	"isAvailable": true // not null
 // }
 
-func (h *productHandler) AddCat(w http.ResponseWriter, r *http.Request) {
-	var req dto.ReqAddOrUpdateCat
-	var res dto.ResAddCat
+func (h *productHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
+	var req dto.ReqAddOrUpdateProduct
+	var res dto.ResAddOrUpdateProduct
 	var jsonData map[string]interface{}
 
 	// Decode request body into the jsonData map
@@ -54,7 +50,7 @@ func (h *productHandler) AddCat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for unexpected fields
-	expectedFields := []string{"name", "race", "sex", "ageInMonth", "description", "imageUrls"}
+	expectedFields := []string{"name", "sku", "category", "imageUrl", "notes", "price", "stock", "location", "isAvailable"}
 	for key := range jsonData {
 		if !contains(expectedFields, key) {
 			http.Error(w, "unexpected field in request body: "+key, http.StatusBadRequest)
@@ -74,22 +70,13 @@ func (h *productHandler) AddCat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate "race" value
-	if req.Race == "Maine Coon" {
-		req.Race = "Maine_Coon"
-	} else if req.Race == "British Shorthair" {
-		req.Race = "British_Shorthair"
-	} else if req.Race == "Scottish Fold" {
-		req.Race = "Scottish_Fold"
-	}
-
 	token, _, err := jwtauth.FromContext(r.Context())
 	if err != nil {
 		http.Error(w, "failed to get token from request", http.StatusBadRequest)
 		return
 	}
 
-	res, err = h.productSvc.AddCat(r.Context(), req, token.Subject())
+	res, err = h.productSvc.AddProduct(r.Context(), req, token.Subject())
 	if err != nil {
 		code, msg := ierr.TranslateError(err)
 		http.Error(w, msg, code)
@@ -109,19 +96,20 @@ func (h *productHandler) AddCat(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *productHandler) GetCat(w http.ResponseWriter, r *http.Request) {
+func (h *productHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
-	var param dto.ParamGetCat
+	var param dto.ParamGetProduct
 
 	param.ID = queryParams.Get("id")
 	param.Limit, _ = strconv.Atoi(queryParams.Get("limit"))
 	param.Offset, _ = strconv.Atoi(queryParams.Get("offset"))
-	param.Race = queryParams.Get("race")
-	param.Sex = queryParams.Get("sex")
-	param.HasMatched, _ = strconv.ParseBool(queryParams.Get("hasMatched"))
-	param.AgeInMonth = queryParams.Get("ageInMonth")
-	param.Owned, _ = strconv.ParseBool(queryParams.Get("owned"))
-	param.Search = queryParams.Get("search")
+	param.Name = queryParams.Get("name")
+	param.IsAvailable, _ = strconv.ParseBool(queryParams.Get("isAvailable"))
+	param.Category = queryParams.Get("category")
+	param.SKU = queryParams.Get("sku")
+	param.Price = queryParams.Get("price")
+	param.InStock, _ = strconv.ParseBool(queryParams.Get("inStock"))
+	param.CreatedAt = queryParams.Get("createdAt")
 
 	token, _, err := jwtauth.FromContext(r.Context())
 	if err != nil {
@@ -129,7 +117,7 @@ func (h *productHandler) GetCat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cats, err := h.productSvc.GetCat(r.Context(), param, token.Subject())
+	products, err := h.productSvc.GetProduct(r.Context(), param, token.Subject())
 	if err != nil {
 		code, msg := ierr.TranslateError(err)
 		http.Error(w, msg, code)
@@ -138,21 +126,25 @@ func (h *productHandler) GetCat(w http.ResponseWriter, r *http.Request) {
 
 	successRes := response.SuccessReponse{}
 	successRes.Message = "success"
-	successRes.Data = cats
+	successRes.Data = products
 
 	json.NewEncoder(w).Encode(successRes)
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *productHandler) GetCatByID(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	token, _, err := jwtauth.FromContext(r.Context())
-	if err != nil {
-		http.Error(w, "failed to get token from request", http.StatusBadRequest)
-		return
-	}
+func (h *productHandler) GetProductShop(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	var param dto.ParamGetProductShop
 
-	cat, err := h.productSvc.GetCatByID(r.Context(), id, token.Subject())
+	param.Limit, _ = strconv.Atoi(queryParams.Get("limit"))
+	param.Offset, _ = strconv.Atoi(queryParams.Get("offset"))
+	param.Name = queryParams.Get("name")
+	param.Category = queryParams.Get("category")
+	param.SKU = queryParams.Get("sku")
+	param.Price = queryParams.Get("price")
+	param.InStock, _ = strconv.ParseBool(queryParams.Get("inStock"))
+
+	products, err := h.productSvc.GetProductShop(r.Context(), param)
 	if err != nil {
 		code, msg := ierr.TranslateError(err)
 		http.Error(w, msg, code)
@@ -161,15 +153,15 @@ func (h *productHandler) GetCatByID(w http.ResponseWriter, r *http.Request) {
 
 	successRes := response.SuccessReponse{}
 	successRes.Message = "success"
-	successRes.Data = cat
+	successRes.Data = products
 
 	json.NewEncoder(w).Encode(successRes)
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *productHandler) UpdateCat(w http.ResponseWriter, r *http.Request) {
+func (h *productHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	var req dto.ReqAddOrUpdateCat
+	var req dto.ReqAddOrUpdateProduct
 	var jsonData map[string]interface{}
 
 	// Decode request body into the jsonData map
@@ -200,22 +192,13 @@ func (h *productHandler) UpdateCat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate "race" value
-	if req.Race == "Maine Coon" {
-		req.Race = "Maine_Coon"
-	} else if req.Race == "British Shorthair" {
-		req.Race = "British_Shorthair"
-	} else if req.Race == "Scottish Fold" {
-		req.Race = "Scottish_Fold"
-	}
-
 	token, _, err := jwtauth.FromContext(r.Context())
 	if err != nil {
 		http.Error(w, "failed to get token from request", http.StatusBadRequest)
 		return
 	}
 
-	err = h.productSvc.UpdateCat(r.Context(), req, id, token.Subject())
+	err = h.productSvc.UpdateProduct(r.Context(), req, id, token.Subject())
 	if err != nil {
 		code, msg := ierr.TranslateError(err)
 		http.Error(w, msg, code)
@@ -225,7 +208,7 @@ func (h *productHandler) UpdateCat(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *productHandler) DeleteCat(w http.ResponseWriter, r *http.Request) {
+func (h *productHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	// Get id from URL path parameters
 	id := r.PathValue("id")
 	// fmt.Printf("id: %s\n", id)
@@ -241,7 +224,7 @@ func (h *productHandler) DeleteCat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.productSvc.DeleteCat(r.Context(), id, token.Subject())
+	err = h.productSvc.DeleteProduct(r.Context(), id, token.Subject())
 	if err != nil {
 		code, msg := ierr.TranslateError(err)
 		http.Error(w, msg, code)

@@ -31,12 +31,14 @@ func (h *Handler) registRoute() {
 
 	userH := newUserHandler(h.service.User)
 	productH := newProductHandler(h.service.Product)
-	matchH := newMatchHandler(h.service.Match)
+	customerH := newCustomerHandler(h.service.Customer)
+	orderH := newOrderHandler(h.service.Order)
 
 	r.Use(middleware.RedirectSlashes)
 
 	r.Post("/v1/staff/register", userH.Register)
 	r.Post("/v1/staff/login", userH.Login)
+	r.Get("/v1/product/customer", productH.GetProductShop)
 
 	// protected route
 	r.Group(func(r chi.Router) {
@@ -45,17 +47,14 @@ func (h *Handler) registRoute() {
 
 		r.Patch("/v1/user", userH.UpdateAccount)
 
-		r.Post("/v1/cat", productH.AddCat)
-		r.Get("/v1/cat", productH.GetCat)
-		r.Get("/v1/cat/{id}", productH.GetCatByID)
-		r.Put("/v1/cat/{id}", productH.UpdateCat)
-		r.Delete("/v1/cat/{id}", productH.DeleteCat)
+		r.Post("/v1/product", productH.AddProduct)
+		r.Get("/v1/product", productH.GetProduct)
+		r.Put("/v1/product/{id}", productH.UpdateProduct)
+		r.Delete("/v1/product/{id}", productH.DeleteProduct)
 
-		r.Post("/v1/cat/match", matchH.MatchCat)
-		r.Get("/v1/cat/match", matchH.GetMatch)
+		r.Post("/v1/customer/register", customerH.RegisterCustomer)
+		r.Get("/v1/customer", customerH.GetCustomer)
 
-		r.Post("/v1/cat/match/approve", matchH.ApproveMatch)
-		r.Post("/v1/cat/match/reject", matchH.RejectMatch)
-		r.Delete("/v1/cat/match/{id}", matchH.DeleteMatch)
+		r.Post("/v1/product/checkout", orderH.Checkout)
 	})
 }
