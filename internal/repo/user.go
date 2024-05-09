@@ -21,7 +21,7 @@ func newUserRepo(conn *pgxpool.Pool) *userRepo {
 
 func (u *userRepo) Insert(ctx context.Context, user entity.User) (string, error) {
 	credVal := user.PhoneNumber
-	q := `INSERT INTO users (id, name, email, password, created_at)
+	q := `INSERT INTO users (id, name, phone_number, password, created_at)
 	VALUES (gen_random_uuid(), $1, $2, $3, EXTRACT(EPOCH FROM now())::bigint) RETURNING id`
 
 	var userID string
@@ -43,7 +43,7 @@ func (u *userRepo) Insert(ctx context.Context, user entity.User) (string, error)
 func (u *userRepo) GetByPhone(ctx context.Context, cred string) (entity.User, error) {
 	user := entity.User{}
 	q := `SELECT id, name, phone_number, password FROM users
-	WHERE email = $1`
+	WHERE phone_number = $1`
 
 	var phone sql.NullString
 

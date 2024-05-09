@@ -104,11 +104,11 @@ func (h *productHandler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	param.Limit, _ = strconv.Atoi(queryParams.Get("limit"))
 	param.Offset, _ = strconv.Atoi(queryParams.Get("offset"))
 	param.Name = queryParams.Get("name")
-	param.IsAvailable, _ = strconv.ParseBool(queryParams.Get("isAvailable"))
+	param.IsAvailable = queryParams.Get("isAvailable")
 	param.Category = queryParams.Get("category")
 	param.SKU = queryParams.Get("sku")
 	param.Price = queryParams.Get("price")
-	param.InStock, _ = strconv.ParseBool(queryParams.Get("inStock"))
+	param.InStock = queryParams.Get("inStock")
 	param.CreatedAt = queryParams.Get("createdAt")
 
 	token, _, err := jwtauth.FromContext(r.Context())

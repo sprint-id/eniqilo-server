@@ -22,11 +22,11 @@ type (
 		Limit       int    `json:"limit"`
 		Offset      int    `json:"offset"`
 		Name        string `json:"name"`
-		IsAvailable bool   `json:"isAvailable"`
+		IsAvailable string `json:"isAvailable"`
 		Category    string `json:"category"`
 		SKU         string `json:"sku"`
 		Price       string `json:"price"`
-		InStock     bool   `json:"inStock"`
+		InStock     string `json:"inStock"`
 		CreatedAt   string `json:"createdAt"`
 		Search      string `json:"search"`
 	}

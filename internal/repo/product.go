@@ -45,13 +45,14 @@ func (cr *productRepo) AddProduct(ctx context.Context, sub string, product entit
 	VALUES ( $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, EXTRACT(EPOCH FROM now())::bigint) RETURNING id, created_at`
 
 	var id string
-	var createdAt time.Time                                                                                                                                                                                       // Add a new variable for createdAt
-	err := cr.conn.QueryRow(ctx, q, sub, product.Name, product.SKU, product.Category, product.ImageUrl, product.Notes, product.Price, product.Stock, product.Location, product.IsAvailable).Scan(&id, &createdAt) // Update the Scan function to include createdAt
+	var createdAt int64
+	err := cr.conn.QueryRow(ctx, q, sub, product.Name, product.SKU, product.Category, product.ImageUrl, product.Notes, product.Price, product.Stock, product.Location, product.IsAvailable).Scan(&id, &createdAt)
 	if err != nil {
 		return dto.ResAddOrUpdateProduct{}, err
 	}
 
-	return dto.ResAddOrUpdateProduct{ID: id, CreatedAt: timepkg.TimeToISO8601(createdAt)}, nil // Update the CreatedAt value using timepkg.TimeToISO8601
+	createdAtTime := time.Unix(createdAt, 0) // Convert createdAt from int64 to time.Time
+	return dto.ResAddOrUpdateProduct{ID: id, CreatedAt: timepkg.TimeToISO8601(createdAtTime)}, nil
 }
 
 func (cr *productRepo) GetProduct(ctx context.Context, param dto.ParamGetProduct, sub string) ([]dto.ResGetProduct, error) {
@@ -73,11 +74,16 @@ func (cr *productRepo) GetProduct(ctx context.Context, param dto.ParamGetProduct
 		query.WriteString(fmt.Sprintf("AND LOWER(name) LIKE LOWER('%s') ", fmt.Sprintf("%%%s%%", param.Name)))
 	}
 
-	// param isAvailable
-	if param.IsAvailable {
+	// param isAvailable value should be true / false / empty
+	// if empty, it will show all product
+	// show param isAvailable
+	fmt.Printf("param.IsAvailable: %s\n", param.IsAvailable)
+	if param.IsAvailable == "true" {
 		query.WriteString("AND is_available = true ")
-	} else if !param.IsAvailable {
+	} else if param.IsAvailable == "false" {
 		query.WriteString("AND is_available = false ")
+	} else {
+		query.WriteString("AND is_available = true ")
 	}
 
 	// param category
@@ -97,11 +103,16 @@ func (cr *productRepo) GetProduct(ctx context.Context, param dto.ParamGetProduct
 		query.WriteString("ORDER BY price DESC ")
 	}
 
-	// param inStock value should be true / false
-	if param.InStock {
+	// param inStock value should be true / false / empty
+	// if empty, it will show all product
+	// show param inStock
+	fmt.Printf("param.InStock: %s\n", param.InStock)
+	if param.InStock == "true" {
 		query.WriteString("AND stock > 0 ")
-	} else if !param.InStock {
+	} else if param.InStock == "false" {
 		query.WriteString("AND stock = 0 ")
+	} else {
+		query.WriteString("AND stock >= 0 ")
 	}
 
 	// param createdAt sort by created time asc or desc, if value is wrong, just ignore the param
@@ -123,7 +134,7 @@ func (cr *productRepo) GetProduct(ctx context.Context, param dto.ParamGetProduct
 	query.WriteString(fmt.Sprintf("LIMIT %d OFFSET %d", param.Limit, param.Offset))
 
 	// show query
-	// fmt.Println(query.String())
+	fmt.Println(query.String())
 
 	rows, err := cr.conn.Query(ctx, query.String()) // Replace $1 with sub
 	if err != nil {
@@ -144,6 +155,7 @@ func (cr *productRepo) GetProduct(ctx context.Context, param dto.ParamGetProduct
 			&result.Category,
 			&imageUrl,
 			&result.Stock,
+			&result.Notes,
 			&result.Price,
 			&result.Location,
 			&result.IsAvailable,
