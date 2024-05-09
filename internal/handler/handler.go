@@ -32,7 +32,7 @@ func (h *Handler) registRoute() {
 	userH := newUserHandler(h.service.User)
 	productH := newProductHandler(h.service.Product)
 	customerH := newCustomerHandler(h.service.Customer)
-	orderH := newOrderHandler(h.service.Order)
+	transactionH := newTransactionHandler(h.service.Transaction)
 
 	r.Use(middleware.RedirectSlashes)
 
@@ -55,6 +55,7 @@ func (h *Handler) registRoute() {
 		r.Post("/v1/customer/register", customerH.RegisterCustomer)
 		r.Get("/v1/customer", customerH.GetCustomer)
 
-		r.Post("/v1/product/checkout", orderH.Checkout)
+		r.Post("/v1/product/checkout", transactionH.Checkout)
+		r.Get("/v1/product/checkout/history", transactionH.GetTransactionHistory)
 	})
 }

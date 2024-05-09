@@ -7,10 +7,10 @@ import (
 type Repo struct {
 	conn *pgxpool.Pool
 
-	User     *userRepo
-	Product  *productRepo
-	Customer *customerRepo
-	Order    *orderRepo
+	User        *userRepo
+	Product     *productRepo
+	Customer    *customerRepo
+	Transaction *transactionRepo
 }
 
 func NewRepo(conn *pgxpool.Pool) *Repo {
@@ -20,7 +20,7 @@ func NewRepo(conn *pgxpool.Pool) *Repo {
 	repo.User = newUserRepo(conn)
 	repo.Product = newProductRepo(conn)
 	repo.Customer = newCustomerRepo(conn)
-	repo.Order = newOrderRepo(conn)
+	repo.Transaction = newOrderRepo(conn)
 
 	return &repo
 }

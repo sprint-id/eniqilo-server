@@ -1,7 +1,7 @@
 package entity
 
-// Order struct
-type Order struct {
+// Transaction struct
+type Transaction struct {
 	CustomerID     string          `json:"customerId"`
 	ProductDetails []ProductDetail `json:"productDetails"`
 	Paid           int             `json:"paid"`

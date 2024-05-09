@@ -15,7 +15,7 @@ import "github.com/sprint-id/eniqilo-server/internal/entity"
 // }
 
 type (
-	ReqOrder struct {
+	ReqTransaction struct {
 		CustomerID     string             `json:"customerId" validate:"required"`
 		ProductDetails []ReqProductDetail `json:"productDetails" validate:"required,min=1,dive"`
 		Paid           int                `json:"paid" validate:"required,min=1"`
@@ -27,14 +27,30 @@ type (
 		Quantity  int    `json:"quantity" validate:"required,min=1"`
 	}
 
-	ResOrder struct {
+	ParamGetTransactionHistory struct {
+		CustomerID string `json:"customerId"`
+		Limit      int    `json:"limit"`
+		Offset     int    `json:"offset"`
+		CreatedAt  string `json:"createdAt"`
+	}
+
+	ResTransaction struct {
 		ID        string `json:"id"`
 		CreatedAt string `json:"createdAt"`
 	}
+
+	ResOrderHistory struct {
+		TransactionID  string             `json:"transactionId"`
+		CustomerID     string             `json:"customerId"`
+		ProductDetails []ReqProductDetail `json:"productDetails"`
+		Paid           int                `json:"paid"`
+		Change         int                `json:"change"`
+		CreatedAt      string             `json:"createdAt"`
+	}
 )
 
-// to entity order
-func (r *ReqOrder) ToOrderEntity() *entity.Order {
+// to entity transaction
+func (r *ReqTransaction) ToTransactionEntity() *entity.Transaction {
 	var productDetails []entity.ProductDetail
 	for _, pd := range r.ProductDetails {
 		productDetails = append(productDetails, entity.ProductDetail{
@@ -43,7 +59,7 @@ func (r *ReqOrder) ToOrderEntity() *entity.Order {
 		})
 	}
 
-	return &entity.Order{
+	return &entity.Transaction{
 		CustomerID:     r.CustomerID,
 		ProductDetails: productDetails,
 		Paid:           r.Paid,
