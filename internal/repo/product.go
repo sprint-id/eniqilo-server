@@ -77,13 +77,11 @@ func (cr *productRepo) GetProduct(ctx context.Context, param dto.ParamGetProduct
 	// param isAvailable value should be true / false / empty
 	// if empty, it will show all product
 	// show param isAvailable
-	fmt.Printf("param.IsAvailable: %s\n", param.IsAvailable)
+	// fmt.Printf("param.IsAvailable: %s\n", param.IsAvailable)
 	if param.IsAvailable == "true" {
 		query.WriteString("AND is_available = true ")
 	} else if param.IsAvailable == "false" {
 		query.WriteString("AND is_available = false ")
-	} else {
-		query.WriteString("AND is_available = true ")
 	}
 
 	// param category
@@ -106,7 +104,7 @@ func (cr *productRepo) GetProduct(ctx context.Context, param dto.ParamGetProduct
 	// param inStock value should be true / false / empty
 	// if empty, it will show all product
 	// show param inStock
-	fmt.Printf("param.InStock: %s\n", param.InStock)
+	// fmt.Printf("param.InStock: %s\n", param.InStock)
 	if param.InStock == "true" {
 		query.WriteString("AND stock > 0 ")
 	} else if param.InStock == "false" {
@@ -119,6 +117,8 @@ func (cr *productRepo) GetProduct(ctx context.Context, param dto.ParamGetProduct
 	if param.CreatedAt == "asc" {
 		query.WriteString("ORDER BY created_at ASC ")
 	} else if param.CreatedAt == "desc" {
+		query.WriteString("ORDER BY created_at DESC ")
+	} else {
 		query.WriteString("ORDER BY created_at DESC ")
 	}
 
@@ -192,18 +192,22 @@ func (cr *productRepo) GetProductShop(ctx context.Context, param dto.ParamGetPro
 		query.WriteString(fmt.Sprintf("AND sku = '%s' ", param.SKU))
 	}
 
+	// param inStock value should be true / false
+	if param.InStock == "true" {
+		query.WriteString("AND stock > 0 ")
+	} else if param.InStock == "false" {
+		query.WriteString("AND stock = 0 ")
+	} else {
+		query.WriteString("AND stock >= 0 ")
+	}
+
 	// param price sort by asc or desc, if value is wrong, just ignore the param
 	if param.Price == "asc" {
 		query.WriteString("ORDER BY price ASC ")
 	} else if param.Price == "desc" {
 		query.WriteString("ORDER BY price DESC ")
-	}
-
-	// param inStock value should be true / false
-	if param.InStock {
-		query.WriteString("AND stock > 0 ")
-	} else if !param.InStock {
-		query.WriteString("AND stock = 0 ")
+	} else {
+		query.WriteString("ORDER BY created_at DESC ")
 	}
 
 	// limit and offset
@@ -214,7 +218,7 @@ func (cr *productRepo) GetProductShop(ctx context.Context, param dto.ParamGetPro
 	query.WriteString(fmt.Sprintf("LIMIT %d OFFSET %d", param.Limit, param.Offset))
 
 	// show query
-	// fmt.Println(query.String())
+	fmt.Println(query.String())
 
 	rows, err := cr.conn.Query(ctx, query.String())
 	if err != nil {
@@ -261,7 +265,7 @@ func (cr *productRepo) UpdateProduct(ctx context.Context, id, sub string, produc
 	return nil
 }
 
-func (cr *productRepo) DeleteProduct(ctx context.Context, sub, id string) error {
+func (cr *productRepo) DeleteProduct(ctx context.Context, id, sub string) error {
 	q := `DELETE FROM products WHERE id=$1 AND user_id=$2`
 
 	_, err := cr.conn.Exec(ctx, q, id, sub)

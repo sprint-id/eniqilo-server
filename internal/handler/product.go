@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -46,6 +47,12 @@ func (h *productHandler) AddProduct(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&jsonData)
 	if err != nil {
 		http.Error(w, "failed to parse request body", http.StatusBadRequest)
+		return
+	}
+
+	// Check if the payload is empty
+	if len(jsonData) == 0 {
+		http.Error(w, "empty payload", http.StatusUnauthorized)
 		return
 	}
 
@@ -142,7 +149,7 @@ func (h *productHandler) GetProductShop(w http.ResponseWriter, r *http.Request) 
 	param.Category = queryParams.Get("category")
 	param.SKU = queryParams.Get("sku")
 	param.Price = queryParams.Get("price")
-	param.InStock, _ = strconv.ParseBool(queryParams.Get("inStock"))
+	param.InStock = queryParams.Get("inStock")
 
 	products, err := h.productSvc.GetProductShop(r.Context(), param)
 	if err != nil {
@@ -171,8 +178,21 @@ func (h *productHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// id should be a number
+	_, err = strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "id should be a number", http.StatusNotFound)
+		return
+	}
+
+	// Check if the payload is empty
+	if len(jsonData) == 0 || id == "" {
+		http.Error(w, "empty payload", http.StatusUnauthorized)
+		return
+	}
+
 	// Check for unexpected fields
-	expectedFields := []string{"name", "race", "sex", "ageInMonth", "description", "imageUrls"}
+	expectedFields := []string{"name", "sku", "category", "imageUrl", "notes", "price", "stock", "location", "isAvailable"}
 	for key := range jsonData {
 		if !contains(expectedFields, key) {
 			http.Error(w, "unexpected field in request body: "+key, http.StatusBadRequest)
@@ -211,7 +231,14 @@ func (h *productHandler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 func (h *productHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	// Get id from URL path parameters
 	id := r.PathValue("id")
-	// fmt.Printf("id: %s\n", id)
+	fmt.Printf("id: %s\n", id)
+
+	// id should be a number
+	_, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "id should be a number", http.StatusNotFound)
+		return
+	}
 
 	token, _, err := jwtauth.FromContext(r.Context())
 	if err != nil {

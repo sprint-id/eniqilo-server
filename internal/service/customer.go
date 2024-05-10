@@ -31,7 +31,7 @@ func (u *CustomerService) RegisterCustomer(ctx context.Context, body dto.ReqRegi
 	res, err = u.repo.Customer.RegisterCustomer(ctx, sub, customer)
 	if err != nil {
 		if err == ierr.ErrDuplicate {
-			return res, ierr.ErrBadRequest
+			return res, ierr.ErrDuplicate
 		}
 		return res, err
 	}

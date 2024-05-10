@@ -31,7 +31,7 @@ func (ts *TransactionService) AddTransaction(ctx context.Context, body dto.ReqTr
 	res, err = ts.repo.Transaction.AddTransaction(ctx, sub, *transaction)
 	if err != nil {
 		if err == ierr.ErrDuplicate {
-			return res, ierr.ErrBadRequest
+			return res, ierr.ErrDuplicate
 		}
 		return res, err
 	}

@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/sprint-id/eniqilo-server/internal/cfg"
@@ -41,6 +43,12 @@ func (u *ProductService) AddProduct(ctx context.Context, body dto.ReqAddOrUpdate
 	var res dto.ResAddOrUpdateProduct
 	err := u.validator.Struct(body)
 	if err != nil {
+		fmt.Printf("error: %v\n", err)
+		return res, ierr.ErrBadRequest
+	}
+
+	// check Image URL if invalid or not complete URL
+	if !isValidURL(body.ImageUrl) {
 		return res, ierr.ErrBadRequest
 	}
 
@@ -91,6 +99,11 @@ func (u *ProductService) UpdateProduct(ctx context.Context, body dto.ReqAddOrUpd
 		return ierr.ErrBadRequest
 	}
 
+	// check Image URL if invalid or not complete URL
+	if !isValidURL(body.ImageUrl) {
+		return ierr.ErrBadRequest
+	}
+
 	product := body.ToProductEntity(sub)
 	err = u.repo.Product.UpdateProduct(ctx, id, sub, product)
 	if err != nil {
@@ -107,4 +120,11 @@ func (u *ProductService) DeleteProduct(ctx context.Context, id string, sub strin
 	}
 
 	return nil
+}
+
+func isValidURL(urlString string) bool {
+	// url validation using regex
+	fmt.Printf("urlString: %s\n", urlString)
+	regex := regexp.MustCompile(`^(https?|ftp)://[^/\s]+\.[^/\s]+(?:/.*)?(?:\.[^/\s]+)?$`)
+	return regex.MatchString(urlString)
 }

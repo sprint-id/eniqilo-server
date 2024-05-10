@@ -14,7 +14,7 @@ type (
 		Price       int    `json:"price" validate:"required,min=1"`
 		Stock       int    `json:"stock" validate:"required,min=0,max=100000"`
 		Location    string `json:"location" validate:"required,min=1,max=200"`
-		IsAvailable bool   `json:"isAvailable" validate:"required"`
+		IsAvailable *bool  `json:"isAvailable" validate:"required"`
 	}
 
 	ParamGetProduct struct {
@@ -38,7 +38,7 @@ type (
 		Category string `json:"category"`
 		SKU      string `json:"sku"`
 		Price    string `json:"price"`
-		InStock  bool   `json:"inStock"`
+		InStock  string `json:"inStock"`
 	}
 
 	ResAddOrUpdateProduct struct {
@@ -83,7 +83,7 @@ func (d *ReqAddOrUpdateProduct) ToProductEntity(userId string) entity.Product {
 		Price:       d.Price,
 		Stock:       d.Stock,
 		Location:    d.Location,
-		IsAvailable: d.IsAvailable,
+		IsAvailable: *d.IsAvailable, // Dereference the pointer value
 		UserID:      userId,
 	}
 }
