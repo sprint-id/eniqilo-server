@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 
 CREATE TABLE IF NOT EXISTS transaction_details (
     id SERIAL PRIMARY KEY,
-    order_id INTEGER REFERENCES transactions(id) ON DELETE CASCADE,
+    transaction_id INTEGER REFERENCES transactions(id) ON DELETE CASCADE,
     product_id INTEGER REFERENCES products(id) ON DELETE CASCADE,
     quantity INTEGER NOT NULL,
     created_at BIGINT DEFAULT EXTRACT(EPOCH FROM NOW())

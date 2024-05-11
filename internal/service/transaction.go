@@ -29,18 +29,15 @@ func (ts *TransactionService) AddTransaction(ctx context.Context, body dto.ReqTr
 
 	transaction := body.ToTransactionEntity()
 	res, err = ts.repo.Transaction.AddTransaction(ctx, sub, *transaction)
-	if err != nil {
-		if err == ierr.ErrDuplicate {
-			return res, ierr.ErrDuplicate
-		}
+	if err != nil && err != ierr.ErrDuplicate {
 		return res, err
 	}
 
-	return res, nil
+	return res, err
 }
 
-func (ts *TransactionService) GetTransactionHistory(ctx context.Context, param dto.ParamGetTransactionHistory, sub string) ([]dto.ResOrderHistory, error) {
-	var res []dto.ResOrderHistory
+func (ts *TransactionService) GetTransactionHistory(ctx context.Context, param dto.ParamGetTransactionHistory, sub string) ([]dto.ResTransactionHistory, error) {
+	var res []dto.ResTransactionHistory
 	err := ts.validator.Struct(param)
 	if err != nil {
 		return res, ierr.ErrBadRequest

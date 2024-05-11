@@ -19,7 +19,7 @@ type (
 		CustomerID     string             `json:"customerId" validate:"required"`
 		ProductDetails []ReqProductDetail `json:"productDetails" validate:"required,min=1,dive"`
 		Paid           int                `json:"paid" validate:"required,min=1"`
-		Change         int                `json:"change" validate:"required,min=0"`
+		Change         *int               `json:"change" validate:"required,min=0"`
 	}
 
 	ReqProductDetail struct {
@@ -39,7 +39,7 @@ type (
 		CreatedAt string `json:"createdAt"`
 	}
 
-	ResOrderHistory struct {
+	ResTransactionHistory struct {
 		TransactionID  string             `json:"transactionId"`
 		CustomerID     string             `json:"customerId"`
 		ProductDetails []ReqProductDetail `json:"productDetails"`
@@ -63,6 +63,6 @@ func (r *ReqTransaction) ToTransactionEntity() *entity.Transaction {
 		CustomerID:     r.CustomerID,
 		ProductDetails: productDetails,
 		Paid:           r.Paid,
-		Change:         r.Change,
+		Change:         *r.Change,
 	}
 }

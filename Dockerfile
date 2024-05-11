@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
-RUN CGO_ENABLED=0 GOOS=linux go build -v -o main cmd/main.go
+RUN GOARCH=amd64 GOOS=linux go build -v -o main_syarif_04 cmd/main.go
 
 # Step 2: Use a minimal base image to run the application
 FROM alpine:3.19  

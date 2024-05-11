@@ -29,6 +29,7 @@ var (
 	ErrForbidden      = customError{Message: "You do not have permission to access or edit this resource."}
 	ErrStockNotEnough = customError{Message: "Sorry, the stock is not enough."}
 	ErrNotEnoughPaid  = customError{Message: "Sorry, the paid is not enough."}
+	ErrChangeNotMatch = customError{Message: "Sorry, the change is not match."}
 )
 
 func TranslateError(err error) (code int, msg string) {
@@ -44,9 +45,11 @@ func TranslateError(err error) (code int, msg string) {
 	case ErrBadRequest:
 		return http.StatusBadRequest, err.Error()
 	case ErrStockNotEnough:
-		return http.StatusConflict, err.Error()
+		return http.StatusBadRequest, err.Error()
 	case ErrNotEnoughPaid:
-		return http.StatusConflict, err.Error()
+		return http.StatusBadRequest, err.Error()
+	case ErrChangeNotMatch:
+		return http.StatusBadRequest, err.Error()
 	}
 
 	return http.StatusInternalServerError, ErrInternal.Message

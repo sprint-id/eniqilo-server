@@ -74,10 +74,7 @@ func (cr *productRepo) GetProduct(ctx context.Context, param dto.ParamGetProduct
 		query.WriteString(fmt.Sprintf("AND LOWER(name) LIKE LOWER('%s') ", fmt.Sprintf("%%%s%%", param.Name)))
 	}
 
-	// param isAvailable value should be true / false / empty
-	// if empty, it will show all product
-	// show param isAvailable
-	// fmt.Printf("param.IsAvailable: %s\n", param.IsAvailable)
+	// param isAvailable value should be true / false
 	if param.IsAvailable == "true" {
 		query.WriteString("AND is_available = true ")
 	} else if param.IsAvailable == "false" {
@@ -101,10 +98,7 @@ func (cr *productRepo) GetProduct(ctx context.Context, param dto.ParamGetProduct
 		query.WriteString("ORDER BY price DESC ")
 	}
 
-	// param inStock value should be true / false / empty
-	// if empty, it will show all product
-	// show param inStock
-	// fmt.Printf("param.InStock: %s\n", param.InStock)
+	// param inStock value should be true / false
 	if param.InStock == "true" {
 		query.WriteString("AND stock > 0 ")
 	} else if param.InStock == "false" {
@@ -114,11 +108,11 @@ func (cr *productRepo) GetProduct(ctx context.Context, param dto.ParamGetProduct
 	}
 
 	// param createdAt sort by created time asc or desc, if value is wrong, just ignore the param
-	if param.CreatedAt == "asc" {
+	if param.CreatedAt == "asc" && param.Offset == 0 {
 		query.WriteString("ORDER BY created_at ASC ")
-	} else if param.CreatedAt == "desc" {
+	} else if param.CreatedAt == "desc" && param.Offset == 0 {
 		query.WriteString("ORDER BY created_at DESC ")
-	} else {
+	} else if param.Offset == 0 {
 		query.WriteString("ORDER BY created_at DESC ")
 	}
 
@@ -206,7 +200,7 @@ func (cr *productRepo) GetProductShop(ctx context.Context, param dto.ParamGetPro
 		query.WriteString("ORDER BY price ASC ")
 	} else if param.Price == "desc" {
 		query.WriteString("ORDER BY price DESC ")
-	} else {
+	} else if param.Offset == 0 {
 		query.WriteString("ORDER BY created_at DESC ")
 	}
 
@@ -266,9 +260,9 @@ func (cr *productRepo) UpdateProduct(ctx context.Context, id, sub string, produc
 }
 
 func (cr *productRepo) DeleteProduct(ctx context.Context, id, sub string) error {
-	q := `DELETE FROM products WHERE id=$1 AND user_id=$2`
-
-	_, err := cr.conn.Exec(ctx, q, id, sub)
+	q := `DELETE FROM products WHERE id=$1`
+	// All staff can delete product
+	_, err := cr.conn.Exec(ctx, q, id)
 	if err != nil {
 		return err
 	}

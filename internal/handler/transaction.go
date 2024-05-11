@@ -55,7 +55,7 @@ func (h *transactionHandler) Checkout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// show request
-	fmt.Printf("MatchCat request: %+v\n", req)
+	fmt.Printf("Checkout request: %+v\n", req)
 
 	token, _, err := jwtauth.FromContext(r.Context())
 	if err != nil {
@@ -75,7 +75,7 @@ func (h *transactionHandler) Checkout(w http.ResponseWriter, r *http.Request) {
 	successRes.Data = res
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated) // Set HTTP status code to 201
+	w.WriteHeader(http.StatusOK) // Set HTTP status code to 201
 	err = json.NewEncoder(w).Encode(successRes)
 	if err != nil {
 		http.Error(w, "failed to encode response", http.StatusInternalServerError)
@@ -86,7 +86,7 @@ func (h *transactionHandler) Checkout(w http.ResponseWriter, r *http.Request) {
 func (h *transactionHandler) GetTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	var param dto.ParamGetTransactionHistory
-	var res []dto.ResOrderHistory
+	var res []dto.ResTransactionHistory
 
 	param.CustomerID = queryParams.Get("customerId")
 	param.Limit, _ = strconv.Atoi(queryParams.Get("limit"))

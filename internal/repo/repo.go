@@ -20,7 +20,7 @@ func NewRepo(conn *pgxpool.Pool) *Repo {
 	repo.User = newUserRepo(conn)
 	repo.Product = newProductRepo(conn)
 	repo.Customer = newCustomerRepo(conn)
-	repo.Transaction = newOrderRepo(conn)
+	repo.Transaction = newTransactionRepo(conn)
 
 	return &repo
 }
