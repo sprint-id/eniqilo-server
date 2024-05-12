@@ -47,4 +47,16 @@ CREATE TABLE IF NOT EXISTS transaction_details (
     created_at BIGINT DEFAULT EXTRACT(EPOCH FROM NOW())
 );
 
+CREATE INDEX idx_users_phone ON users (phone_number);
+CREATE INDEX idx_users_id ON users (id);
+CREATE INDEX idx_products_id ON products (id);
+CREATE INDEX idx_products_user_id ON products (user_id);
+CREATE INDEX idx_customers_id ON customers (id);
+CREATE INDEX idx_customers_staff_id ON customers (staff_id);
+CREATE INDEX idx_transactions_id ON transactions (id);
+CREATE INDEX idx_transactions_customer_id ON transactions (customer_id);
+CREATE INDEX idx_transaction_details_id ON transaction_details (id);
+CREATE INDEX idx_transaction_details_transaction_id ON transaction_details (transaction_id);
+CREATE INDEX idx_transaction_details_product_id ON transaction_details (product_id);
+
 COMMIT TRANSACTION;
