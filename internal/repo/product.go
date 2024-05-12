@@ -259,7 +259,7 @@ func (cr *productRepo) UpdateProduct(ctx context.Context, id, sub string, produc
 	return nil
 }
 
-func (cr *productRepo) DeleteProduct(ctx context.Context, id, sub string) error {
+func (cr *productRepo) DeleteProduct(ctx context.Context, id string) error {
 	q := `DELETE FROM products WHERE id=$1`
 	// All staff can delete product
 	_, err := cr.conn.Exec(ctx, q, id)

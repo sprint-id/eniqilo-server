@@ -240,18 +240,18 @@ func (h *productHandler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, _, err := jwtauth.FromContext(r.Context())
+	if id == "" {
+		http.Error(w, "id is required for product", http.StatusBadRequest)
+		return
+	}
+
+	_, _, err = jwtauth.FromContext(r.Context())
 	if err != nil {
 		http.Error(w, "failed to get token from request", http.StatusBadRequest)
 		return
 	}
 
-	if id == "" {
-		http.Error(w, "id is required for cat", http.StatusBadRequest)
-		return
-	}
-
-	err = h.productSvc.DeleteProduct(r.Context(), id, token.Subject())
+	err = h.productSvc.DeleteProduct(r.Context(), id)
 	if err != nil {
 		code, msg := ierr.TranslateError(err)
 		http.Error(w, msg, code)

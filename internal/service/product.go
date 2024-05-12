@@ -113,8 +113,8 @@ func (u *ProductService) UpdateProduct(ctx context.Context, body dto.ReqAddOrUpd
 	return nil
 }
 
-func (u *ProductService) DeleteProduct(ctx context.Context, id string, sub string) error {
-	err := u.repo.Product.DeleteProduct(ctx, id, sub)
+func (u *ProductService) DeleteProduct(ctx context.Context, id string) error {
+	err := u.repo.Product.DeleteProduct(ctx, id)
 	if err != nil {
 		return err
 	}
