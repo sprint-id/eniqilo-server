@@ -13,8 +13,11 @@ RUN go mod download
 # Copy everything from the current directory to the PWD(Present Working Directory) inside the container
 COPY . .
 
+ENV GOARCH=amd64
+ENV GOOS=linux 
+
 # Build the Go app
-RUN GOARCH=amd64 GOOS=linux go build -v -o main_syarif_04 cmd/main.go
+RUN go build -o main ./cmd/main.go
 
 # Step 2: Use a minimal base image to run the application
 FROM alpine:3.19  
@@ -28,6 +31,15 @@ COPY --from=builder /app/main .
 
 # Expose port 8080 to the outside world
 EXPOSE 8080
+
+ENV DB_HOST=localhost
+ENV DB_PORT=5432
+ENV DB_USER=postgres
+ENV DB_PASSWORD=secret
+ENV DB_NAME=mydb
+ENV DB_PARAMS=sslmode=disable
+ENV JWT_SECRET=secretly
+ENV BCRYPT_SALT=8
 
 # Command to run the executable
 CMD ["./main"]
