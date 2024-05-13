@@ -21,11 +21,18 @@ func newCustomerRepo(conn *pgxpool.Pool) *customerRepo {
 }
 
 func (mr *customerRepo) RegisterCustomer(ctx context.Context, sub string, customer entity.Customer) (dto.ResRegisterOrGetCustomer, error) {
+	// Start a transaction with serializable isolation level
+	tx, err := mr.conn.Begin(ctx)
+	if err != nil {
+		return dto.ResRegisterOrGetCustomer{}, err
+	}
+	defer tx.Rollback(ctx)
+
 	q := `INSERT INTO customers (staff_id, phone_number, name, created_at)
 	VALUES ( $1, $2, $3, EXTRACT(EPOCH FROM now())::bigint) RETURNING id`
 
 	var id string
-	err := mr.conn.QueryRow(ctx, q, sub, customer.PhoneNumber, customer.Name).Scan(&id)
+	err = tx.QueryRow(ctx, q, sub, customer.PhoneNumber, customer.Name).Scan(&id)
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			if pgErr.Code == "23505" {
@@ -35,8 +42,32 @@ func (mr *customerRepo) RegisterCustomer(ctx context.Context, sub string, custom
 		return dto.ResRegisterOrGetCustomer{}, err
 	}
 
+	// Commit the transaction
+	err = tx.Commit(ctx)
+	if err != nil {
+		return dto.ResRegisterOrGetCustomer{}, err
+	}
+
 	return dto.ResRegisterOrGetCustomer{UserID: id, PhoneNumber: customer.PhoneNumber, Name: customer.Name}, nil
 }
+
+// func (mr *customerRepo) RegisterCustomer(ctx context.Context, sub string, customer entity.Customer) (dto.ResRegisterOrGetCustomer, error) {
+// 	q := `INSERT INTO customers (staff_id, phone_number, name, created_at)
+// 	VALUES ( $1, $2, $3, EXTRACT(EPOCH FROM now())::bigint) RETURNING id`
+
+// 	var id string
+// 	err := mr.conn.QueryRow(ctx, q, sub, customer.PhoneNumber, customer.Name).Scan(&id)
+// 	if err != nil {
+// 		if pgErr, ok := err.(*pgconn.PgError); ok {
+// 			if pgErr.Code == "23505" {
+// 				return dto.ResRegisterOrGetCustomer{}, ierr.ErrDuplicate
+// 			}
+// 		}
+// 		return dto.ResRegisterOrGetCustomer{}, err
+// 	}
+
+// 	return dto.ResRegisterOrGetCustomer{UserID: id, PhoneNumber: customer.PhoneNumber, Name: customer.Name}, nil
+// }
 
 func (mr *customerRepo) GetCustomer(ctx context.Context, param dto.ParamGetCustomer, sub string) ([]dto.ResRegisterOrGetCustomer, error) {
 	var query strings.Builder
